@@ -1,4 +1,4 @@
-# 📦 SyftBox for 🍿 Netflix Viewing History
+# SyftBox for Netflix Viewing History 🍿
 
 This project is a proof of concept utilizing [SyftBox](https://syftbox-documentation.openmined.org/) from [OpenMined](https://openmined.org/) to process 🔒 private data. The use case focuses on analyzing the [Netflix viewing history](https://help.netflix.com/en/node/101917) provided by users. This effort is part of the [#30DaysOfFLCode](https://info.openmined.org/30daysofflcode) initiative.
 
@@ -10,8 +10,8 @@ This project is a proof of concept utilizing [SyftBox](https://syftbox-documenta
 
 The primary aim is to apply 🛡️ privacy-enhancing technologies to derive aggregate information from Netflix viewing history while safeguarding personal details. Some possible insights include:
 
-- 🏆 **Most common show viewed in the last week**
-- 📊 **Viewing trends among participants**
+- **Most common show viewed in the last week**
+- **Viewing trends among participants**
 
 ---
 
@@ -24,14 +24,14 @@ The project is currently focused on reducing the granularity of the Netflix view
 
 ---
 
-## 📋 Requirements
+## Requirements
 
-1. **🍿 Netflix Viewing History:** Users must have their Netflix viewing history file. Instructions to retrieve this file are available [here](https://help.netflix.com/en/node/101917).
-2. **Set Up 🛠️ ****`DATA_PATH`****:** In `main.py`, set the `DATA_PATH` variable to point to your downloaded viewing history file.
+1. **Netflix Viewing History:** Users must have their Netflix viewing history file. Instructions to retrieve this file are available [here](https://help.netflix.com/en/node/101917).
+2. **Set Up ****`DATA_PATH`****:** In `main.py`, set the `DATA_PATH` variable to point to your downloaded viewing history file.
 
 ---
 
-## 🖥️ Loading to SyftBox
+## Loading to SyftBox
 
 1. 📂 Copy the following files into the SyftBox API folder:
 
@@ -71,4 +71,4 @@ The project is currently focused on reducing the granularity of the Netflix view
 
 ---
 
-Feel free to reach out with ❓ questions or 💡 suggestions to improve this project.
+Feel free to reach out with questions or suggestions to improve this project.
