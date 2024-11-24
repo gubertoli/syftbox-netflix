@@ -7,7 +7,7 @@ if [ ! -d ".venv" ]; then
     echo "Virtual environment created."
 fi
 
-source .venv/bin/activate
+. .venv/bin/activate
 
 echo "Installing dependencies..."
 pip install -r requirements.txt

@@ -1,5 +1,6 @@
 import os
 import sys
+import csv
 import datetime
 import numpy as np
 from pathlib import Path
@@ -11,7 +12,7 @@ AGGREGATOR_DATASITE = "gubertoli@gmail.com"
 DATA_PATH = "~/Downloads/NetflixViewingHistory.csv" # change here with your data retrieved from Netflix
 
 
-def create_private_folder(path: Path) -> Path:
+def create_private_folder(path: Path, client: Client) -> Path:
     """
     Create a private folder within the specified path.
 
@@ -27,7 +28,7 @@ def create_private_folder(path: Path) -> Path:
 
     return netflix_datapath
 
-def create_public_folder(path: Path) -> None:
+def create_public_folder(path: Path, client: Client) -> None:
     """
     Create a API public folder within the specified path.
 
@@ -45,16 +46,25 @@ def create_public_folder(path: Path) -> None:
 
 
 def load_netflix_history(file_path: str) -> np.ndarray:
-    
-    history = np.genfromtxt(
-        file_path,
-        delimiter=',',
-        dtype=str,
-        skip_header=1,
-        encoding="utf-8"
-    )
-    
-    return history
+    """
+    Loads Netflix viewing history into a NumPy array, handling quoted fields.
+
+    Args:
+        file_path (str): Path to the NetflixViewingHistory.csv file.
+
+    Returns:
+        np.ndarray: A 2D NumPy array with Title and Date columns.
+    """
+
+    cleaned_data = []
+
+    with open(file_path, mode="r", encoding="utf-8") as file:
+        reader = csv.reader(file)
+        next(reader)  # Skip the header
+        for row in reader:
+            cleaned_data.append(row)
+
+    return np.array(cleaned_data)
 
 
 def reduce_information(history: np.ndarray) -> np.ndarray:
@@ -65,7 +75,7 @@ def reduce_information(history: np.ndarray) -> np.ndarray:
     # Get only the title, for instance:
     # From: "The Blacklist: Season 1: Wujing (No. 84)" | To: "The Blacklist"
     # Other case like movies or documentaries, get the full title
-    titles = np.array([title.split(":")[0] if ":" in title else title for title in data[:, 0]])
+    titles = np.array([title.split(":")[0] if ":" in title else title for title in history[:, 0]])
 
     # Convert dates to week numbers
     weeks = np.array([
@@ -80,23 +90,31 @@ def reduce_information(history: np.ndarray) -> np.ndarray:
 
 
 def main():
-    if not os.path.exists(DATA_PATH):
-        raise FileNotFoundError(f"Error: The specified data path '{DATA_PATH}' does not exist.")
+    full_datapath = os.path.expanduser(DATA_PATH)
+
+    if not os.path.exists(full_datapath):
+        raise FileNotFoundError(f"Error: The specified data path '{full_datapath}' does not exist.")
 
     client = Client.load()
 
     restricted_public_folder = client.api_data(API_NAME)    # create an API
-    create_public_folder(restricted_public_folder)  # create the dedicated API folder
+    create_public_folder(restricted_public_folder, client)  # create the dedicated API folder
 
-    private_folder = create_private_folder(client.datasite_path)
+    private_folder = create_private_folder(client.datasite_path, client)
 
     # First column is title and second column the date
-    viewing_history = load_netflix_history(DATA_PATH)
+    viewing_history = load_netflix_history(full_datapath)
 
+    # Reduce the original information
+    reduced_history = reduce_information(viewing_history)
 
-    ###########
-    ## TO DO: Load the viewing history and saving in the private and public folder
-    ##        pass the original data through -> reduce_information
+    # Saving the reduced Viewing History.
+    public_file: Path = restricted_public_folder / "netflix_reduced.npy"
+    np.save(str(public_file), reduced_history)
+
+    # Saving the full Viewing History.
+    private_file: Path = private_folder / "netflix_full.npy"
+    np.save(str(private_file), viewing_history)
 
 
 
