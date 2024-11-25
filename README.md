@@ -13,6 +13,7 @@ The primary aim is to apply 🛡️ privacy-enhancing technologies to derive agg
 - **Most common show viewed in the last week**
 - **Viewing trends among participants**
 - **Am I watching too much in comparison with others?**
+- **Watching more due to sickness/injury?** [(source)](https://www.kaggle.com/code/nachoco/netflix-viewing-analysis-with-injury)
 
 ---
 
