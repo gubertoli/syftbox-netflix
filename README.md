@@ -25,7 +25,10 @@ The project is currently focused on reducing the granularity of the Netflix view
 ---
 
 ## Requirements
-
+0. **Start SyftBox:**
+   ```bash
+   $ curl -LsSf https://syftbox.openmined.org/install.sh | sh
+   ```
 1. **Netflix Viewing History:** Users must have their Netflix viewing history file. Instructions to retrieve this file are available [here](https://help.netflix.com/en/node/101917).
 2. **Set Up ****`DATA_PATH`****:** In `main.py`, set the `DATA_PATH` variable to point to your downloaded viewing history file.
 
