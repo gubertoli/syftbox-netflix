@@ -8,10 +8,11 @@ This project is a proof of concept utilizing [SyftBox](https://syftbox-documenta
 
 ## 🎯 Goals
 
-The primary aim is to apply 🛡️ privacy-enhancing technologies to derive aggregate information from Netflix viewing history while safeguarding personal details. Some possible insights include:
+The primary aim is to apply 🛡️ privacy-enhancing technologies to derive aggregate information from Netflix viewing history while safeguarding personal details. Some possible insights include (**_ideas are welcome_**):
 
 - **Most common show viewed in the last week**
 - **Viewing trends among participants**
+- **Am I watching too much in comparison with others?**
 
 ---
 
@@ -31,6 +32,18 @@ The project is currently focused on reducing the granularity of the Netflix view
    ```
 1. **Netflix Viewing History:** Users must have their Netflix viewing history file. Instructions to retrieve this file are available [here](https://help.netflix.com/en/node/101917).
 2. **Set Up ****`DATA_PATH`****:** In `main.py`, set the `DATA_PATH` variable to point to your downloaded viewing history file.
+
+### Data format (Netflix)
+A comma-separated file (CSV), organized by Title and Date:
+
+```
+Title,Date
+"The Blacklist: Season 1: Wujing (No. 84)","21/11/2024"
+"Buy Now: The Shopping Conspiracy","20/11/2024"
+"Jake Paul vs. Mike Tyson","16/11/2024"
+"Murder Mindfully: Breathing","15/11/2024"
+...
+```
 
 ---
 
