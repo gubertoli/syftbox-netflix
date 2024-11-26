@@ -5,12 +5,15 @@ import datetime
 import numpy as np
 from pathlib import Path
 from syftbox.lib import Client, SyftPermission
+from collections import Counter
+from dotenv import load_dotenv
 
+# Load environment variables
+load_dotenv()
 
-API_NAME = "netflix_trend_participant"
-AGGREGATOR_DATASITE = "gubertoli@gmail.com"
-DATA_PATH = "~/Downloads/NetflixViewingHistory.csv" # change here with your data retrieved from Netflix
-
+API_NAME = os.getenv("API_NAME")
+AGGREGATOR_DATASITE = os.getenv("AGGREGATOR_DATASITE")
+DATA_PATH = os.getenv("DATA_PATH")
 
 def create_private_folder(path: Path, client: Client) -> Path:
     """
@@ -67,27 +70,42 @@ def load_netflix_history(file_path: str) -> np.ndarray:
     return np.array(cleaned_data)
 
 
-def reduce_information(history: np.ndarray) -> np.ndarray:
+def extract_titles(history: np.ndarray) -> np.ndarray:
     """
-    In this function (by now) reduces too much detail about the viewing history.
+    Extract and reduce titles from the viewing history.
     """
-    
-    # Get only the title, for instance:
-    # From: "The Blacklist: Season 1: Wujing (No. 84)" | To: "The Blacklist"
-    # Other case like movies or documentaries, get the full title
-    titles = np.array([title.split(":")[0] if ":" in title else title for title in history[:, 0]])
+    return np.array([title.split(":")[0] if ":" in title else title for title in history[:, 0]])
 
-    # Convert dates to week numbers
-    weeks = np.array([
+def convert_dates_to_weeks(history: np.ndarray) -> np.ndarray:
+    """
+    Convert viewing dates to ISO week numbers.
+    """
+    return np.array([
         datetime.datetime.strptime(date, "%d/%m/%Y").isocalendar()[1]
         for date in history[:, 1]
     ])
 
+def aggregate_title_week_counts(reduced_data: np.ndarray) -> np.ndarray:
+    """
+    Aggregate the reduced viewing history by counting occurrences for each title and week.
 
-    reduced_data = np.column_stack((titles, weeks))
+    Args:
+        reduced_data (np.ndarray): A 2D array with titles and weeks.
 
-    return reduced_data
+    Returns:
+        np.ndarray: A 2D array with aggregated counts for each title and week combination.
+    """
+    counts = Counter(map(tuple, reduced_data))
+    aggregated_data = np.array([[title, week, str(count)] for (title, week), count in counts.items()])
+    return aggregated_data
 
+def orchestrate_reduction(history: np.ndarray) -> np.ndarray:
+    """
+    Orchestrates the reduction process for Netflix viewing history.
+    """
+    titles = extract_titles(history)
+    weeks = convert_dates_to_weeks(history)
+    return np.column_stack((titles, weeks))
 
 def main():
     full_datapath = os.path.expanduser(DATA_PATH)
@@ -106,17 +124,22 @@ def main():
     viewing_history = load_netflix_history(full_datapath)
 
     # Reduce the original information
-    reduced_history = reduce_information(viewing_history)
+    reduced_history = orchestrate_reduction(viewing_history)
+
+    # Aggregate the reduced information
+    aggregated_history = aggregate_title_week_counts(reduced_history)
 
     # Saving the reduced Viewing History.
     public_file: Path = restricted_public_folder / "netflix_reduced.npy"
     np.save(str(public_file), reduced_history)
 
+    # Saving the aggregated Viewing History
+    aggregated_file: Path = restricted_public_folder / "netflix_aggregated.npy"
+    np.save(str(aggregated_file), aggregated_history)
+
     # Saving the full Viewing History.
     private_file: Path = private_folder / "netflix_full.npy"
     np.save(str(private_file), viewing_history)
-
-
 
 if __name__ == "__main__":
     try:
