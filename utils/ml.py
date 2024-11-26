@@ -61,7 +61,7 @@ def train_model(dataset_location):
     # Create and train the MLP
     mlp = MLPClassifier(
         hidden_layer_sizes=(64, 32),
-        max_iter=1000,
+        max_iter=2000,
         random_state=42
     )
     
