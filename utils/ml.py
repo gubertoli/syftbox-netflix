@@ -16,12 +16,13 @@ def extract_features(df):
         int(re.search(r'Season (\d+)', x).group(1)) if 'Season' in x else 0)
     
     # Convert date strings to datetime objects
-    df['Date'] = pd.to_datetime(df['Date'], format='%d/%m/%y')
+    df['Date'] = pd.to_datetime(df['Date'], format='%d/%m/%Y')
     
     # Extract temporal features
     df['day_of_week'] = df['Date'].dt.dayofweek
-    df['hour'] = df['Date'].dt.hour
+    # df['hour'] = df['Date'].dt.hour
     
+
     return df
 
 def prepare_data(file_path):
@@ -78,8 +79,8 @@ def train_model(dataset_location):
     #   y_full = np.hstack((y_train, y_test))
     #   X_full_scaled = scaler.transform(X_full)
     #   mlp.fit(X_full_scaled, y_full)
-    
-    return mlp, scaler, le_show
+    num_samples = X.shape[0]
+    return mlp, scaler, le_show, num_samples
 
 def get_recommendation(mlp, scaler, le_show, last_watched):
     # Extract features from last watched show

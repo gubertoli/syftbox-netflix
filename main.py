@@ -2,6 +2,7 @@ import os
 import sys
 import csv
 import datetime
+import joblib
 import numpy as np
 from pathlib import Path
 from syftbox.lib import Client, SyftPermission
@@ -12,9 +13,9 @@ from utils.ml import train_model
 # Load environment variables
 load_dotenv()
 
-API_NAME = os.getenv("API_NAME")
-AGGREGATOR_DATASITE = os.getenv("AGGREGATOR_DATASITE")
-DATA_PATH = os.getenv("DATA_PATH")
+API_NAME = "netflix_trend_participant" 			    # os.getenv("API_NAME")
+AGGREGATOR_DATASITE = "aggregator@openmined.org" 	# os.getenv("AGGREGATOR_DATASITE")
+DATA_PATH = "~/Downloads/NetflixViewingHistory.csv" # os.getenv("DATA_PATH")
 
 def create_private_folder(path: Path, client: Client) -> Path:
     """
@@ -147,11 +148,12 @@ def main():
     np.save(str(private_file), viewing_history)
 
     # Train a MLP as recommender in the data
-    mlp, _, _ = train_model(DATA_PATH)
-    mlp_weights: Path = restricted_public_folder / "mlp" / "netflix_mlp_weights.npy"
-    mlp_bias: Path = restricted_public_folder / "mlp" / "netflix_mlp_bias.npy"
-    np.save(mlp_weights, mlp.coefs_)
-    np.save(mlp_bias, mlp.intercepts_)
+    mlp, _, _, num_samples = train_model(DATA_PATH)
+
+    mlp_weights: Path = restricted_public_folder / f"netflix_mlp_weights_{num_samples}.joblib"
+    mlp_bias: Path = restricted_public_folder / f"netflix_mlp_bias_{num_samples}.joblib"
+    joblib.dump(mlp.coefs_, str(mlp_weights))
+    joblib.dump(mlp.intercepts_, str(mlp_bias))
 
 if __name__ == "__main__":
     try:
