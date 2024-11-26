@@ -16,7 +16,7 @@ def extract_features(df):
         int(re.search(r'Season (\d+)', x).group(1)) if 'Season' in x else 0)
     
     # Convert date strings to datetime objects
-    df['Date'] = pd.to_datetime(df['Date'], format='%m/%d/%y')
+    df['Date'] = pd.to_datetime(df['Date'], format='%d/%m/%y')
     
     # Extract temporal features
     df['day_of_week'] = df['Date'].dt.dayofweek
