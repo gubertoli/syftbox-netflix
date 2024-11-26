@@ -32,7 +32,7 @@ def create_private_folder(path: Path, client: Client) -> Path:
 
     return netflix_datapath
 
-def create_public_folder(path: Path, client: Client)train_model -> None:
+def create_public_folder(path: Path, client: Client) -> None:
     """
     Create a API public folder within the specified path.
 
