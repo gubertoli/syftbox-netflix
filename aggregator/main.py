@@ -27,6 +27,7 @@ def get_users_history(
         datasites_path: Path, peers: list[str]
 ) -> tuple[float, list[str]]:
     
+    active_peers = []
     for peer in peers:
         view_history_file = (
             datasites_path / peer / "api_data" / API_NAME / "netflix_aggregated.npy"    # other options are netflix_reduced.npy or MLP weights
@@ -37,5 +38,9 @@ def get_users_history(
 
         try:
             data = np.load(view_history_file)
-
+            active_peers.append(peer)
             # TODO :THE AGGREGATOR PROCESSING
+        except:
+            continue
+
+    return active_peers

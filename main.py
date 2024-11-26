@@ -7,6 +7,7 @@ from pathlib import Path
 from syftbox.lib import Client, SyftPermission
 from collections import Counter
 from dotenv import load_dotenv
+from utils.ml import train_model
 
 # Load environment variables
 load_dotenv()
@@ -31,7 +32,7 @@ def create_private_folder(path: Path, client: Client) -> Path:
 
     return netflix_datapath
 
-def create_public_folder(path: Path, client: Client) -> None:
+def create_public_folder(path: Path, client: Client)train_model -> None:
     """
     Create a API public folder within the specified path.
 
@@ -76,6 +77,7 @@ def extract_titles(history: np.ndarray) -> np.ndarray:
     """
     return np.array([title.split(":")[0] if ":" in title else title for title in history[:, 0]])
 
+
 def convert_dates_to_weeks(history: np.ndarray) -> np.ndarray:
     """
     Convert viewing dates to ISO week numbers.
@@ -84,6 +86,7 @@ def convert_dates_to_weeks(history: np.ndarray) -> np.ndarray:
         datetime.datetime.strptime(date, "%d/%m/%Y").isocalendar()[1]
         for date in history[:, 1]
     ])
+
 
 def aggregate_title_week_counts(reduced_data: np.ndarray) -> np.ndarray:
     """
@@ -99,6 +102,7 @@ def aggregate_title_week_counts(reduced_data: np.ndarray) -> np.ndarray:
     aggregated_data = np.array([[title, week, str(count)] for (title, week), count in counts.items()])
     return aggregated_data
 
+
 def orchestrate_reduction(history: np.ndarray) -> np.ndarray:
     """
     Orchestrates the reduction process for Netflix viewing history.
@@ -106,6 +110,7 @@ def orchestrate_reduction(history: np.ndarray) -> np.ndarray:
     titles = extract_titles(history)
     weeks = convert_dates_to_weeks(history)
     return np.column_stack((titles, weeks))
+
 
 def main():
     full_datapath = os.path.expanduser(DATA_PATH)
@@ -140,6 +145,13 @@ def main():
     # Saving the full Viewing History.
     private_file: Path = private_folder / "netflix_full.npy"
     np.save(str(private_file), viewing_history)
+
+    # Train a MLP as recommender in the data
+    mlp, _, _ = train_model(DATA_PATH)
+    mlp_weights: Path = restricted_public_folder / "mlp" / "netflix_mlp_weights.npy"
+    mlp_bias: Path = restricted_public_folder / "mlp" / "netflix_mlp_bias.npy"
+    np.save(mlp_weights, mlp.coefs_)
+    np.save(mlp_bias, mlp.intercepts_)
 
 if __name__ == "__main__":
     try:
