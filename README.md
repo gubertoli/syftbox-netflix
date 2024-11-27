@@ -27,12 +27,16 @@ The project is currently focused on reducing the granularity of the Netflix view
 ---
 
 ## Requirements
+_Tested on Linux and MacOS._
+
 0. **Start SyftBox:**
    ```bash
    $ curl -LsSf https://syftbox.openmined.org/install.sh | sh
    ```
-1. **Netflix Viewing History:** Users must have their Netflix viewing history file. Instructions to retrieve this file are available [here](https://help.netflix.com/en/node/101917).
-2. **Set Up ****`DATA_PATH`****:** In `main.py`, set the `DATA_PATH` variable to point to your downloaded viewing history file.
+1. **Copy this repository to SyftBox:** Copy this repository to your SyftBox `apis` folder.
+
+
+2. **⚠️ Set Up the Environment:** You shall create a `.env` file with your data in the same folder as `run.sh`. Take the available `.env.example` as reference.
 
 ### Data format (Netflix)
 A comma-separated file (CSV), organized by Title and Date:

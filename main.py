@@ -8,14 +8,16 @@ from pathlib import Path
 from syftbox.lib import Client, SyftPermission
 from collections import Counter
 from dotenv import load_dotenv
+from fetcher import NetflixFetcher
 from utils.ml import train_model
+from utils.checks import is_file_modified_today
 
 # Load environment variables
 load_dotenv()
 
-API_NAME = "netflix_trend_participant" 			    # os.getenv("API_NAME")
-AGGREGATOR_DATASITE = "aggregator@openmined.org" 	# os.getenv("AGGREGATOR_DATASITE")
-DATA_PATH = "~/Downloads/NetflixViewingHistory.csv" # os.getenv("DATA_PATH")
+API_NAME = os.getenv("API_NAME")
+AGGREGATOR_DATASITE = os.getenv("AGGREGATOR_DATASITE")
+DATA_PATH = os.getenv("DATA_PATH")
 
 def create_private_folder(path: Path, client: Client) -> Path:
     """
@@ -116,9 +118,12 @@ def orchestrate_reduction(history: np.ndarray) -> np.ndarray:
 def main():
     full_datapath = os.path.expanduser(DATA_PATH)
 
-    if not os.path.exists(full_datapath):
-        raise FileNotFoundError(f"Error: The specified data path '{full_datapath}' does not exist.")
-
+    # check if there is viewing history file or if the viewing history is up-to-date (daily)
+    if not os.path.exists(full_datapath): # or not is_file_modified_today(full_datapath):  ## TODO: the second check is not working
+        print(">>", full_datapath)
+        downloader = NetflixFetcher()
+        downloader.run()
+    
     client = Client.load()
 
     restricted_public_folder = client.api_data(API_NAME)    # create an API
