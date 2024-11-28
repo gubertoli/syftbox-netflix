@@ -1,5 +1,7 @@
 import os
 import time
+import logging
+from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -10,6 +12,9 @@ from selenium.webdriver.common.keys import Keys
 class NetflixFetcher:
     def __init__(self):
         """Initialize the downloader with environment variables."""
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.INFO)
+
         self.email = os.getenv("NETFLIX_EMAIL")
         self.password = os.getenv("NETFLIX_PASSWORD")
         self.profile = os.getenv("NETFLIX_PROFILE")
@@ -54,6 +59,40 @@ class NetflixFetcher:
         time.sleep(3)
         self.driver.find_element(By.LINK_TEXT, "Download all").click()
         time.sleep(10)
+        self.rename_downloaded_file()
+
+    def rename_downloaded_file(self):
+        """Rename the downloaded file into a subfolder with the date and include datetime in the name."""
+        print(">> Renaming downloaded file")
+        downloaded_file = None
+
+        # Wait until the file appears in the output directory
+        for _ in range(20):  # Poll for 20 seconds
+            files = os.listdir(self.output_dir)
+            for file in files:
+                if file.endswith(".csv"):  # Assuming Netflix downloads a CSV file
+                    downloaded_file = file
+                    break
+            if downloaded_file:
+                break
+
+        if downloaded_file:
+            # Create a subfolder with the current date
+            date_str = datetime.now().strftime("%Y-%m-%d")
+            subfolder_path = os.path.join(self.output_dir, date_str)
+            os.makedirs(subfolder_path, exist_ok=True)
+
+            # Rename the file with the datetime
+            datetime_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            new_file_name = f"Netflix_Viewing_Activity_{datetime_str}.csv"
+            old_path = os.path.join(self.output_dir, downloaded_file)
+            new_path = os.path.join(subfolder_path, new_file_name)
+
+            os.rename(old_path, new_path)
+            print(f"File renamed and moved to: {new_path}")
+        else:
+            self.logger.info("Download file not found. Please check the download directory.")
+
 
     def close(self):
         """Close the WebDriver."""
