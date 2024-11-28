@@ -13,7 +13,7 @@ def extract_features(df):
     # Extract show name and season from title
     df['show'] = df['Title'].apply(lambda x: x.split(':')[0] if ':' in x else x)
     df['season'] = df['Title'].apply(lambda x: 
-        int(re.search(r'Season (\d+)', x).group(1)) if 'Season' in x else 0)
+        int(re.search(r'Season (\d+)', x).group(1)) if re.search(r'Season (\d+)', x) else 0)
     
     # Convert date strings to datetime objects
     df['Date'] = pd.to_datetime(df['Date'], format='%d/%m/%Y')
@@ -22,7 +22,6 @@ def extract_features(df):
     df['day_of_week'] = df['Date'].dt.dayofweek
     # df['hour'] = df['Date'].dt.hour
     
-
     return df
 
 def prepare_data(file_path):
