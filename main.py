@@ -17,7 +17,8 @@ load_dotenv()
 
 API_NAME = os.getenv("API_NAME")
 AGGREGATOR_DATASITE = os.getenv("AGGREGATOR_DATASITE")
-DATA_PATH = os.getenv("DATA_PATH")
+CSV_NAME = os.getenv("NETFLIX_CSV")
+OUTPUT_DIR = os.getenv("OUTPUT_DIR")
 
 def create_private_folder(path: Path, client: Client) -> Path:
     """
@@ -122,33 +123,40 @@ def get_latest_file(subfolder_path):
     """
     Get the latest file in the subfolder by datetime in filename.
     """
-    files = [f for f in os.listdir(subfolder_path) if os.path.isfile(os.path.join(subfolder_path, f))]
+    netflix_csv = os.path.splitext(CSV_NAME)[0] + "_"
+
+    files = [f for f in os.listdir(subfolder_path) if os.path.isfile(os.path.join(subfolder_path, f)) and netflix_csv in f]
     if not files:
         raise FileNotFoundError(f"No files found in {subfolder_path}")
 
     def extract_datetime(filename):
         try:
-            date_str = filename.replace("Netflix_Viewing_Activity_", "").replace(".csv", "")
-            return datetime.strptime(date_str, "%Y-%m-%d_%H-%M-%S")
+            date_str = filename.replace(netflix_csv, "").replace(".csv", "")
+            print(date_str)
+            return datetime.strptime(date_str, "%Y-%m-%d")
         except ValueError:
             return datetime.min
 
     files.sort(key=lambda f: extract_datetime(f), reverse=True)
+    
     return os.path.join(subfolder_path, files[0])
 
 
-def get_or_download_latest_data(data_path):
+def get_or_download_latest_data():
     """
     Ensure latest Netflix data exists or download it.
     """
-    datapath = os.path.expanduser(data_path)
+    datapath = os.path.expanduser(OUTPUT_DIR)
     today_date = datetime.now().strftime("%Y-%m-%d")
-    subfolder_path = os.path.join(datapath, today_date)
+    netflix_csv = os.path.splitext(CSV_NAME)[0]
 
-    if not os.path.exists(subfolder_path):
+    filename = f"{netflix_csv}_{today_date}.csv"
+    file_path = os.path.join(datapath, filename)
+
+    if not os.path.exists(file_path):
         download_daily_data()
 
-    return get_latest_file(subfolder_path)
+    return get_latest_file(datapath)
 
 def join_viewing_history_with_netflix(reduced_history, netflix_show_data):
     """
@@ -188,13 +196,13 @@ def join_viewing_history_with_netflix(reduced_history, netflix_show_data):
     return joined_data
 
 def main():
-    datapath = os.path.expanduser(DATA_PATH)
 
     try:
-        latest_data_file = get_or_download_latest_data(datapath)
+        latest_data_file = get_or_download_latest_data()
         print(f"Process completed. Latest data file is: {latest_data_file}")
     except Exception as e:
         print(f"Error: {e}")
+        sys.exit(1)
         
     client = Client.load()
 

@@ -18,8 +18,9 @@ class NetflixFetcher:
         self.email = os.getenv("NETFLIX_EMAIL")
         self.password = os.getenv("NETFLIX_PASSWORD")
         self.profile = os.getenv("NETFLIX_PROFILE")
-        self.output_dir = os.getenv("OUTPUT_DIR")
+        self.output_dir = os.path.expanduser(os.getenv("OUTPUT_DIR"))
         self.driver_path = os.getenv("CHROMEDRIVER_PATH")
+        self.csv_name = os.getenv("NETFLIX_CSV")
         self.driver = None
 
     def setup_driver(self):
@@ -42,7 +43,7 @@ class NetflixFetcher:
         password_input = self.driver.find_element(By.NAME, "password")
         email_input.send_keys(self.email)
         password_input.send_keys(self.password)
-        print("Logging In")
+        print(">> Logging In")
         password_input.send_keys(Keys.ENTER)
         time.sleep(3)
 
@@ -70,26 +71,21 @@ class NetflixFetcher:
         for _ in range(20):  # Poll for 20 seconds
             files = os.listdir(self.output_dir)
             for file in files:
-                if file.endswith(".csv"):  # Assuming Netflix downloads a CSV file
+                if os.path.basename(file) == self.csv_name:  # Assuming Netflix downloads a CSV file
                     downloaded_file = file
                     break
             if downloaded_file:
                 break
 
         if downloaded_file:
-            # Create a subfolder with the current date
-            date_str = datetime.now().strftime("%Y-%m-%d")
-            subfolder_path = os.path.join(self.output_dir, date_str)
-            os.makedirs(subfolder_path, exist_ok=True)
-
             # Rename the file with the datetime
-            datetime_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            new_file_name = f"Netflix_Viewing_Activity_{datetime_str}.csv"
+            date_str = datetime.now().strftime("%Y-%m-%d")
+            new_file_name = f"NetflixViewingHistory_{date_str}.csv"
             old_path = os.path.join(self.output_dir, downloaded_file)
-            new_path = os.path.join(subfolder_path, new_file_name)
+            new_path = os.path.join(self.output_dir, new_file_name)
 
             os.rename(old_path, new_path)
-            print(f"File renamed and moved to: {new_path}")
+            print(f"File renamed to: {new_path}")
         else:
             self.logger.info("Download file not found. Please check the download directory.")
 
