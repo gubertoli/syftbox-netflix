@@ -15,14 +15,12 @@ The primary aim is to apply 🛡️ privacy-enhancing technologies to derive agg
 - **Am I watching too much in comparison with others?**
 - **Watching more due to sickness/injury?** [(source)](https://www.kaggle.com/code/nachoco/netflix-viewing-analysis-with-injury)
 
----
+## Sketch Preview
 
-## 🚧 Current Status
+Below is the sketch preview for insights generated on 2024-11-28:
 
-The project is currently focused on reducing the granularity of the Netflix viewing history entries. For example:
+![Sketch for 2024-11-28](aggregator/static/sketch-2024-11-28.png)
 
-- **From:** `🎬 The Blacklist: Season 1: Wujing (No. 84) 📅 21/11/2024`
-- **To:** `🎬 The Blacklist 📆 Week 47`
 
 ---
 
