@@ -1,0 +1,86 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f9f9f9;
+}
+header {
+    background-color: #e50914;
+    color: white;
+    text-align: center;
+    padding: 1rem 0;
+    font-size: 1.5rem;
+}
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+}
+.content {
+    display: flex;
+    justify-content: space-between;
+    width: 80%;
+    margin-bottom: 2rem;
+}
+.left, .right {
+    flex: 1;
+    margin: 0 1rem;
+    padding: 1rem;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+.left {
+    max-width: 45%;
+}
+.right {
+    max-width: 45%;
+}
+.section-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+.powered-by {
+    font-size: 0.9rem;
+    color: #555;
+    margin-top: 1rem;
+    text-align: right;
+    font-style: italic;
+}
+ul {
+    list-style: none;
+    padding: 0;
+}
+li {
+    margin: 0.5rem 0;
+}
+select {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+.total-participants {
+    margin: 1rem 0;
+    font-size: 1rem;
+    text-align: center;
+    color: #333;
+}
+.repository {
+    text-align: center;
+    padding: 2rem;
+    background-color: #eeeeee;
+    width: 100%;
+}
+.repository a {
+    color: #e50914;
+    font-weight: bold;
+    text-decoration: none;
+}
+.repository a:hover {
+    text-decoration: underline;
+}

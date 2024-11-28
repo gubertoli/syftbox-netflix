@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netflix #30DaysOfFLCode</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        Netflix #30DaysOfFLCode
+    </header>
+    <div class="container">
+        <div class="content">
+            <div class="left">
+                <div class="section-title">Top 10 Most Viewed Series</div>
+                <ul id="top-series">
+                    <!-- Top 10 most viewed series will be populated dynamically -->
+                </ul>
+                <div class="powered-by">Powered by Differential Privacy</div>
+            </div>
+            <div class="right">
+                <div class="section-title">Get Recommendations</div>
+                <select id="series-dropdown">
+                    <option value="" disabled selected>Select a series</option>
+                    <!-- Dropdown options will be populated dynamically -->
+                </select>
+                <ul id="recommendations">
+                    <!-- Recommendations will appear here dynamically -->
+                </ul>
+                <div class="powered-by">Powered by Federated Learning</div>
+            </div>
+        </div>
+        <div class="total-participants">
+            Total of Participants: #
+        </div>
+        <div class="repository">
+            <p>Join the distributed solution and contribute to the project on <a href="https://github.com/gubertoli/syftbox-netflix" target="_blank">GitHub</a>.</p>
+        </div>
+        <div class="footer">
+            <p>Inspired by the <strong>#30DaysOfFLCode</strong> challenge and supported by <a href="https://openmined.org" target="_blank">OpenMined</a>.</p>
+        </div>
+    </div>
+
+    <script>
+        // Sample data for demonstration
+        const topSeries = ["Breaking Bad", "Stranger Things", "The Crown", "The Witcher", "Ozark", "Money Heist", "Dark", "Narcos", "The Umbrella Academy", "Black Mirror"];
+        const recommendations = {
+            "Breaking Bad": ["Better Call Saul", "Ozark", "Narcos", "The Crown", "The Wire"],
+            "Stranger Things": ["The Umbrella Academy", "Dark", "Shadow and Bone", "The Witcher", "Locke & Key"],
+            // Add more series and their recommendations as needed
+        };
+
+        // Populate top series
+        const topSeriesList = document.getElementById("top-series");
+        topSeries.forEach(series => {
+            const li = document.createElement("li");
+            li.textContent = series;
+            topSeriesList.appendChild(li);
+        });
+
+        // Populate dropdown menu
+        const dropdown = document.getElementById("series-dropdown");
+        Object.keys(recommendations).forEach(series => {
+            const option = document.createElement("option");
+            option.value = series;
+            option.textContent = series;
+            dropdown.appendChild(option);
+        });
+
+        // Handle dropdown selection
+        dropdown.addEventListener("change", event => {
+            const selectedSeries = event.target.value;
+            const recommendationList = document.getElementById("recommendations");
+            recommendationList.innerHTML = ""; // Clear previous recommendations
+
+            if (recommendations[selectedSeries]) {
+                recommendations[selectedSeries].forEach(rec => {
+                    const li = document.createElement("li");
+                    li.textContent = rec;
+                    recommendationList.appendChild(li);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
