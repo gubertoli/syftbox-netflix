@@ -39,14 +39,14 @@ _Tested on Linux and MacOS._
    ```bash
    curl -LsSf https://syftbox.openmined.org/install.sh | sh
    ```
-2. **Copy this repository to SyftBox:** 
+2. **Copy this repository to SyftBox** 
 
    - Copy this repository to your SyftBox `apis` folder:
    ```bash
    cd ~/SyftBox/apis
    git clone https://github.com/gubertoli/syftbox-netflix.git netflix_trend_participant
    ```
-3. **⚠️ Set Up the Environment:** 
+3. **⚠️ Set Up the Environment** 
 
    - You shall create a `.env` file with your data in the `netflix_trend_participant`. 
    ```bash
@@ -57,16 +57,16 @@ _Tested on Linux and MacOS._
    - Edit the `.env` with your Netflix personal information.
 
 ### Data format (Netflix)
-A comma-separated file (CSV), organized by Title and Date:
+The data provided by Netflix (Viewing History) is a comma-separated file (CSV), organized by Title and Date:
 
-```
-Title,Date
-"The Blacklist: Season 1: Wujing (No. 84)","21/11/2024"
-"Buy Now: The Shopping Conspiracy","20/11/2024"
-"Jake Paul vs. Mike Tyson","16/11/2024"
-"Murder Mindfully: Breathing","15/11/2024"
-...
-```
+   ```
+   Title,Date
+   "The Blacklist: Season 1: Wujing (No. 84)","21/11/2024"
+   "Buy Now: The Shopping Conspiracy","20/11/2024"
+   "Jake Paul vs. Mike Tyson","16/11/2024"
+   "Murder Mindfully: Breathing","15/11/2024"
+   ...
+   ```
 
 ---
 
