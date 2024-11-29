@@ -27,14 +27,30 @@ Below is the sketch preview for insights generated on 2024-11-28:
 ## Requirements
 _Tested on Linux and MacOS._
 
-0. **Start SyftBox:**
+0. Install the `chromedriver` to perform a daily retrieval of your Netflix viewing history:
    ```bash
-   $ curl -LsSf https://syftbox.openmined.org/install.sh | sh
+   brew install chromedriver  # MacOS
    ```
-1. **Copy this repository to SyftBox:** Copy this repository to your SyftBox `apis` folder.
+   ```bash
+   sudo apt-get install chromium-driver  # Ubuntu
+   ```
 
+1. **Start SyftBox:**
+   ```bash
+   curl -LsSf https://syftbox.openmined.org/install.sh | sh
+   ```
+2. **Copy this repository to SyftBox:** Copy this repository to your SyftBox `apis` folder:
+   ```bash
+   cd ~/SyftBox/apis
+   git clone https://github.com/gubertoli/syftbox-netflix.git netflix_trend_participant
+   ```
+3. **⚠️ Set Up the Environment:** You shall create a `.env` file with your data in the `netflix_trend_participant`. 
+   ```bash
+   cd netflix_trend_participant
+   cp .env.example .env
+   ```
 
-2. **⚠️ Set Up the Environment:** You shall create a `.env` file with your data in the same folder as `run.sh`. Take the available `.env.example` as reference.
+   - Edit the `.env` with your Netflix personal information.
 
 ### Data format (Netflix)
 A comma-separated file (CSV), organized by Title and Date:
@@ -50,35 +66,17 @@ Title,Date
 
 ---
 
-## Loading to SyftBox
-
-1. 📂 Copy the following files into the SyftBox API folder:
-
-   - 📄 `requirements.txt`
-   - 📄 `run.sh`
-   - 📄 `main.py` (ensure it is updated as needed for your setup)
-
-2. The target directory should be:
-
-   - `/SyftBox/apis/netflix_trend_participant`
-
-3. Logs for debugging and status updates can be found in:
-
-   - `/SyftBox/apis/netflix_trend_participant/logs/netflix_trend_participant.log`
-
----
-
 ## 📁 Generated Files
 
-1. **Reduced Viewing History:**
+1. **Aggregated / PET Files:**
 
-   - 📂 File: `/SyftBox/datasites/<your-email>/api_data/netflix_trend_participant/netflix_reduced.npy`
-   - Contains the aggregated and reduced version of the Netflix viewing history, accessible to participants.
+   - 📂 Path: `/SyftBox/datasites/<your-email>/api_data/netflix_trend_participant/`
+   - This folder contains the aggregated and/or processed (privacy enhanced) Netflix viewing history, accessible to aggregator. For instance, parameters of machine learning models for federated learning or differential private metrics.
 
 2. **Full Viewing History:**
 
    - 📂 File: `/SyftBox/datasites/<your-email>/private/netflix_data/netflix_full.npy`
-   - Contains the full version of the Netflix viewing history, stored privately and not accessible externally.
+   - Contains the full version of the Netflix viewing history, stored privately and not accessible externally. This could be used as a starting point for PETs evaluations,
 
 ---
 
