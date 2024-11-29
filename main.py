@@ -9,7 +9,7 @@ from syftbox.lib import Client, SyftPermission
 from collections import Counter
 from dotenv import load_dotenv
 from fetcher import NetflixFetcher
-from utils.ml import train_model
+from utils.ml import train_model, SequenceModel
 from utils.checks import is_file_modified_today
 
 # Load environment variables
@@ -249,6 +249,9 @@ def main():
     mlp_bias: Path = restricted_public_folder / f"netflix_mlp_bias_{num_samples}.joblib"
     joblib.dump(mlp.coefs_, str(mlp_weights))
     joblib.dump(mlp.intercepts_, str(mlp_bias))
+
+    # Train locally a sequence model to predict next series
+    sequence_recommender = SequenceModel(viewing_history)
 
 if __name__ == "__main__":
     try:

@@ -9,6 +9,36 @@ from sklearn.neural_network import MLPClassifier
 from datetime import datetime
 import re
 
+class SequenceModel:
+    """
+    This class creates a sequence model to predict/recommend the next show.
+    From the original data, it creates an ordered dataframe from oldest to newest,
+    with the attributes First_Seen (date), a number of episodes seen.
+    """
+    def __init__(self, dataset: np.ndarray):
+        self.dataset = dataset
+        self.process_dataset()
+
+    def process_dataset(self):
+        """
+        This method get the original data and organizes sequentially by oldest to the newest seen TV Series.
+        Aggregating the number of episodes seen (Total_Views) and the stating date (Fist_Seen).
+        """
+        df = pd.DataFrame(self.dataset, columns=["Title", "Date"])
+        df = extract_features(df).copy()
+        df_aggregated = (
+            df.groupby("show")
+            .agg(Total_Views=("Date", "size"), First_Seen=("Date", "min"))
+            .reset_index()
+        )
+        df_aggregated = df_aggregated.sort_values(by="First_Seen", ascending=True).reset_index(drop=True)
+        
+        df_filtered = df_aggregated[df_aggregated["Total_Views"] > 1].reset_index(drop=True)
+        print(df_filtered)
+        
+    
+
+
 def extract_features(df):
     # Extract show name and season from title
     df['show'] = df['Title'].apply(lambda x: x.split(':')[0] if ':' in x else x)
