@@ -41,14 +41,14 @@ _Tested on Linux and MacOS._
    ```
 2. **Copy this repository to SyftBox:** 
 
-Copy this repository to your SyftBox `apis` folder:
+   - Copy this repository to your SyftBox `apis` folder:
    ```bash
    cd ~/SyftBox/apis
    git clone https://github.com/gubertoli/syftbox-netflix.git netflix_trend_participant
    ```
 3. **⚠️ Set Up the Environment:** 
 
-You shall create a `.env` file with your data in the `netflix_trend_participant`. 
+   - You shall create a `.env` file with your data in the `netflix_trend_participant`. 
    ```bash
    cd netflix_trend_participant
    cp .env.example .env
