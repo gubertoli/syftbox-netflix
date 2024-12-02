@@ -3,9 +3,12 @@
 import os
 import re
 import joblib
+import json
 import numpy as np
+import pandas as pd
 from pathlib import Path
 from syftbox.lib import Client
+from sklearn.preprocessing import LabelEncoder
 
 API_NAME = os.getenv("API_NAME")
 
@@ -83,9 +86,22 @@ def mlp_fedavg(weights: list, biases: list) -> tuple[list, list]:
 
     return fedavg_weights, fedavg_biases
     
+def create_vocab():
+    df = pd.read_csv("./data/netflix_series_2024-12.csv.zip")
+
+    label_encoder = LabelEncoder()
+    label_encoder.fit(df['Title'])
+
+    vocab_mapping = {title: idx for idx, title in enumerate(label_encoder.classes_)}
+    
+    with open('./data/vocabulary.json', 'w') as f:
+        json.dump(vocab_mapping, f)
 
 if __name__ == "__main__":
     client = Client.load()
+
+    # Create a Vocabulary of TV Series
+    create_vocab()
 
     datasite_path = Path(client.datasite_path.parent)   # automatically retrieve datasites path
 
