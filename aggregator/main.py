@@ -116,4 +116,3 @@ if __name__ == "__main__":
     joblib.dump(fedavg_weights, output_mlp_fedavg / "netflix_mlp_fedavg_weights.joblib")
     joblib.dump(fedavg_biases, output_mlp_fedavg / "netflix_mlp_fedavg_biases.joblib")
 
-    
