@@ -86,7 +86,7 @@ def mlp_fedavg(weights: list, biases: list) -> tuple[list, list]:
 
     return fedavg_weights, fedavg_biases
     
-def create_vocab():
+def create_tvseries_vocab():
     df = pd.read_csv("./data/netflix_series_2024-12.csv.zip")
 
     label_encoder = LabelEncoder()
@@ -94,14 +94,14 @@ def create_vocab():
 
     vocab_mapping = {title: idx for idx, title in enumerate(label_encoder.classes_)}
     
-    with open('./data/vocabulary.json', 'w') as f:
-        json.dump(vocab_mapping, f)
+    with open('./data/tv-series_vocabulary.json', 'w', encoding='utf-8') as f:
+        json.dump(vocab_mapping, f, ensure_ascii=False, indent=4)
 
 if __name__ == "__main__":
     client = Client.load()
 
     # Create a Vocabulary of TV Series
-    create_vocab()
+    create_tvseries_vocab()
 
     datasite_path = Path(client.datasite_path.parent)   # automatically retrieve datasites path
 
