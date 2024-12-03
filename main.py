@@ -123,23 +123,33 @@ def get_latest_file(subfolder_path):
     """
     Get the latest file in the subfolder by datetime in filename.
     """
-    netflix_csv = os.path.splitext(CSV_NAME)[0] + "_"
+    netflix_csv_prefix = os.path.splitext(CSV_NAME)[0] + "_"
 
-    files = [f for f in os.listdir(subfolder_path) if os.path.isfile(os.path.join(subfolder_path, f)) and netflix_csv in f]
+    # List all relevant CSV files in the subfolder
+    files = [
+        f for f in os.listdir(subfolder_path)
+        if os.path.isfile(os.path.join(subfolder_path, f)) and f.startswith(netflix_csv_prefix)
+    ]
+
     if not files:
         raise FileNotFoundError(f"No files found in {subfolder_path}")
 
+    # Extract dates and sort files by date descending
     def extract_datetime(filename):
         try:
-            date_str = filename.replace(netflix_csv, "").replace(".csv", "")
-            print(date_str)
+            date_str = filename.replace(netflix_csv_prefix, "").replace(".csv", "")
             return datetime.strptime(date_str, "%Y-%m-%d")
         except ValueError:
-            return datetime.min
+            return None
 
-    files.sort(key=lambda f: extract_datetime(f), reverse=True)
-    
-    return os.path.join(subfolder_path, files[0])
+    files_with_dates = [(f, extract_datetime(f)) for f in files]
+    valid_files = [(f, dt) for f, dt in files_with_dates if dt is not None]
+
+    if not valid_files:
+        raise FileNotFoundError(f"No valid files with dates found in {subfolder_path}")
+
+    latest_file = max(valid_files, key=lambda x: x[1])[0]
+    return os.path.join(subfolder_path, latest_file)
 
 
 def get_or_download_latest_data():
@@ -148,9 +158,9 @@ def get_or_download_latest_data():
     """
     datapath = os.path.expanduser(OUTPUT_DIR)
     today_date = datetime.now().strftime("%Y-%m-%d")
-    netflix_csv = os.path.splitext(CSV_NAME)[0]
+    netflix_csv_prefix = os.path.splitext(CSV_NAME)[0]
 
-    filename = f"{netflix_csv}_{today_date}.csv"
+    filename = f"{netflix_csv_prefix}_{today_date}.csv"
     file_path = os.path.join(datapath, filename)
 
     if not os.path.exists(file_path):

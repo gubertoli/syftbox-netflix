@@ -6,34 +6,27 @@ from fetcher.netflix_fetcher import NetflixFetcher  # Replace with the actual fi
 
 class TestNetflixFetcherRename(unittest.TestCase):
     @patch.dict(os.environ, {
-        "OUTPUT_DIR": "/tmp"
+        "OUTPUT_DIR": "/mocked/output/dir"
     })
     @patch("fetcher.netflix_fetcher.datetime")  # Mock datetime in the module where it is used
-    @patch("os.makedirs", return_value=None)  # Mock directory creation
     @patch("os.rename", return_value=None)    # Mock file renaming
     @patch("os.listdir", return_value=["viewing_activity.csv"])  # Mock the download folder contents
     @patch("time.sleep", return_value=None)  # Avoid actual sleeps
-    def test_rename_downloaded_file(self, mock_sleep, mock_listdir, mock_rename, mock_makedirs, mock_datetime):
-        """Test renaming and moving the downloaded file."""
+    def test_rename_downloaded_file(self, mock_sleep, mock_listdir, mock_rename, mock_datetime):
+        """Test renaming the downloaded file with the current date."""
         fetcher = NetflixFetcher()
-
+        fetcher.csv_name = "viewing_activity.csv"  # Set the expected CSV name
+        
         # Mock current datetime for consistent test output
         mock_datetime.now.return_value = datetime(2024, 11, 27, 14, 30, 45)
         mock_datetime.strftime = datetime.strftime
 
         fetcher.rename_downloaded_file()
 
-        # Dynamically construct the expected path
-        expected_output_dir = os.getenv("OUTPUT_DIR")
-        expected_subfolder = os.path.join(expected_output_dir, "2024-11-27")
-
-        # Ensure the subfolder is created
-        mock_makedirs.assert_called_once_with(expected_subfolder, exist_ok=True)
-
-        # Ensure the file is renamed
+        # Ensure the file is renamed with the expected name and date
         mock_rename.assert_called_once_with(
-            os.path.join(expected_output_dir, "viewing_activity.csv"),
-            os.path.join(expected_subfolder, "Netflix_Viewing_Activity_2024-11-27_14-30-45.csv")
+            os.path.join(fetcher.output_dir, "viewing_activity.csv"),
+            os.path.join(fetcher.output_dir, "NetflixViewingHistory_2024-11-27.csv")
         )
 
     @patch("os.listdir", return_value=[])  # Simulate no files found
