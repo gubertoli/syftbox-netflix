@@ -11,6 +11,7 @@ from syftbox.lib import Client
 from sklearn.preprocessing import LabelEncoder
 
 API_NAME = os.getenv("API_NAME")
+DATA_DIR = os.getenv("AGGREGATOR_DATA_DIR")
 
 def network_participants(datasite_path: Path) -> list[str]:
     """
@@ -22,7 +23,7 @@ def network_participants(datasite_path: Path) -> list[str]:
     
     """
 
-    entries = os.listdir(datasite_path)
+    entries = sorted(os.listdir(datasite_path))
     users = []
 
     for entry in entries:
@@ -87,14 +88,16 @@ def mlp_fedavg(weights: list, biases: list) -> tuple[list, list]:
     return fedavg_weights, fedavg_biases
     
 def create_tvseries_vocab():
-    df = pd.read_csv("./data/netflix_series_2024-12.csv.zip")
+    zip_file = os.path.join(DATA_DIR, "netflix_series_2024-12.csv.zip")
+    df = pd.read_csv(zip_file)
 
     label_encoder = LabelEncoder()
     label_encoder.fit(df['Title'])
 
     vocab_mapping = {title: idx for idx, title in enumerate(label_encoder.classes_)}
     
-    with open('./data/tv-series_vocabulary.json', 'w', encoding='utf-8') as f:
+    output_path = os.path.join(DATA_DIR, "tv-series_vocabulary.json")
+    with open(output_path, 'w', encoding='utf-8') as f:
         json.dump(vocab_mapping, f, ensure_ascii=False, indent=4)
 
 if __name__ == "__main__":
@@ -115,4 +118,3 @@ if __name__ == "__main__":
     
     joblib.dump(fedavg_weights, output_mlp_fedavg / "netflix_mlp_fedavg_weights.joblib")
     joblib.dump(fedavg_biases, output_mlp_fedavg / "netflix_mlp_fedavg_biases.joblib")
-

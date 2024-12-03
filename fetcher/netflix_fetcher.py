@@ -15,10 +15,20 @@ class NetflixFetcher:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.INFO)
 
+        # Create handler and formatter
+        console_handler = logging.StreamHandler()
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        console_handler.setFormatter(formatter)
+        
+        # Add the handler to the logger
+        self.logger.addHandler(console_handler)
+
+        self.logger.info("Initializing Netflix Fetcher")
+
         self.email = os.getenv("NETFLIX_EMAIL")
         self.password = os.getenv("NETFLIX_PASSWORD")
         self.profile = os.getenv("NETFLIX_PROFILE")
-        self.output_dir = os.path.expanduser(os.getenv("OUTPUT_DIR"))
+        self.output_dir = os.getenv("OUTPUT_DIR")
         self.driver_path = os.getenv("CHROMEDRIVER_PATH")
         self.csv_name = os.getenv("NETFLIX_CSV")
         self.driver = None
@@ -30,6 +40,9 @@ class NetflixFetcher:
             "download.default_directory": self.output_dir,
             "download.prompt_for_download": False,
         }
+
+        self.logger.info("Downloading Netflix Viewing Activity to %s", self.output_dir)
+
         chrome_options.add_experimental_option("prefs", prefs)
         chrome_options.add_argument("--headless")  # Run in headless mode
         chrome_service = Service(self.driver_path)
