@@ -17,7 +17,7 @@ class SequenceModel:
     """
     def __init__(self, dataset: np.ndarray):
         self.dataset = dataset
-        self.process_dataset()
+        self.aggregated_data = self.process_dataset()
 
     def process_dataset(self):
         """
@@ -34,10 +34,9 @@ class SequenceModel:
         df_aggregated = df_aggregated.sort_values(by="First_Seen", ascending=True).reset_index(drop=True)
         
         df_filtered = df_aggregated[df_aggregated["Total_Views"] > 1].reset_index(drop=True)
-        print(df_filtered)
+        return df_filtered
         
     
-
 
 def extract_features(df):
     # Extract show name and season from title
