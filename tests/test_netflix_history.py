@@ -109,62 +109,90 @@ class TestNetflixHistory(unittest.TestCase):
         # Assert the downloader's `run` method was called
         mock_fetcher_instance.run.assert_called_once()
 
+    @patch("main.CSV_NAME", "NetflixViewingActivity.csv")
     @patch("os.listdir", return_value=[
-        "Netflix_Viewing_Activity_2024-11-27_14-00-00.csv",
-        "Netflix_Viewing_Activity_2024-11-27_15-30-00.csv",
+        "NetflixViewingActivity_2024-11-27.csv",
+        "NetflixViewingActivity_2024-11-26.csv",
+        "NetflixViewingActivity_2024-11-25.csv",
     ])
     @patch("os.path.isfile", return_value=True)
     def test_get_latest_file(self, mock_isfile, mock_listdir):
-        subfolder_path = "/Users/datagero/netflix_data/2024-11-27"
-        expected_file = "/Users/datagero/netflix_data/2024-11-27/Netflix_Viewing_Activity_2024-11-27_15-30-00.csv"
+        """
+        Test get_latest_file with mocked directory and files.
+        """
+        subfolder_path = "/mocked/subfolder"
+
+        # Expected result
+        expected_file = "/mocked/subfolder/NetflixViewingActivity_2024-11-27.csv"
 
         # Run the function
         result = get_latest_file(subfolder_path)
 
         # Assertions
         self.assertEqual(result, expected_file)
+        mock_listdir.assert_called_once_with(subfolder_path)
 
     @patch("main.get_latest_file")
     @patch("main.download_daily_data")
     @patch("os.path.exists")
-    def test_get_or_download_latest_data_subfolder_exists(self, mock_exists, mock_download, mock_get_latest):
+    @patch("main.OUTPUT_DIR", "/mocked/netflix_data")
+    @patch("main.CSV_NAME", "NetflixViewingActivity.csv")
+    @patch("main.datetime")  # Mock datetime module inside the function
+    def test_get_or_download_latest_data_file_exists(self, mock_datetime, mock_exists, mock_download, mock_get_latest):
         """
-        Test behavior when the subfolder for today's data already exists.
+        Test when today's file already exists.
         """
-        # Mock return values
+        # Mock today's date
+        mock_datetime.now.return_value = datetime(2024, 11, 27)
+        mock_datetime.strftime = datetime.strftime  # Ensure strftime works as expected
+
+        today_date = "2024-11-27"
+        file_path = f"/mocked/netflix_data/NetflixViewingActivity_{today_date}.csv"
+
+        # Mock os.path.exists to simulate the file exists
         mock_exists.return_value = True
-        expected_file = "/Users/datagero/netflix_data/2024-11-27/Netflix_Viewing_Activity_2024-11-27_15-30-00.csv"
-        mock_get_latest.return_value = expected_file
+
+        # Mock get_latest_file to return the existing file
+        mock_get_latest.return_value = file_path
 
         # Run the function
-        result = get_or_download_latest_data("~/netflix_data")
+        result = get_or_download_latest_data()
 
         # Assertions
-        mock_download.assert_not_called()  # Downloader should not be called
-        mock_get_latest.assert_called_once()  # Latest file should be retrieved
-        self.assertEqual(result, expected_file)  # Verify correct file is returned
+        mock_download.assert_not_called()  # Download should not be triggered
+        mock_get_latest.assert_called_once_with("/mocked/netflix_data")
+        self.assertEqual(result, file_path)
 
     @patch("main.get_latest_file")
     @patch("main.download_daily_data")
     @patch("os.path.exists")
-    def test_get_or_download_latest_data_subfolder_missing(self, mock_exists, mock_download, mock_get_latest):
+    @patch("main.OUTPUT_DIR", "/mocked/netflix_data")
+    @patch("main.CSV_NAME", "NetflixViewingActivity.csv")
+    @patch("main.datetime")  # Mock datetime module inside the function
+    def test_get_or_download_latest_data_file_missing(self, mock_datetime, mock_exists, mock_download, mock_get_latest):
         """
-        Test behavior when the subfolder for today's data does not exist.
+        Test when today's file does not exist, and download is triggered.
         """
-        # Mock return values
-        mock_exists.side_effect = lambda path: path == "/Users/datagero/netflix_data"
-        mock_download.return_value = "/Users/datagero/netflix_data/2024-11-27"
-        expected_file = "/Users/datagero/netflix_data/2024-11-27/Netflix_Viewing_Activity_2024-11-27_15-30-00.csv"
-        mock_get_latest.return_value = expected_file
+        # Mock today's date
+        mock_datetime.now.return_value = datetime(2024, 11, 27)
+        mock_datetime.strftime = datetime.strftime  # Ensure strftime works as expected
+
+        today_date = "2024-11-27"
+        file_path = f"/mocked/netflix_data/NetflixViewingActivity_{today_date}.csv"
+
+        # Mock os.path.exists to simulate the file does not exist
+        mock_exists.side_effect = lambda path: path != file_path
+
+        # Mock get_latest_file to return the new file after download
+        mock_get_latest.return_value = file_path
 
         # Run the function
-        result = get_or_download_latest_data("~/netflix_data")
+        result = get_or_download_latest_data()
 
         # Assertions
-        mock_download.assert_called_once()  # Downloader should be called
-        mock_get_latest.assert_called_once_with("/Users/datagero/netflix_data/2024-11-27")
-        self.assertEqual(result, expected_file)  # Verify correct file is returned
-
+        mock_download.assert_called_once()  # Ensure download is triggered
+        mock_get_latest.assert_called_once_with("/mocked/netflix_data")
+        self.assertEqual(result, file_path)
 
 if __name__ == "__main__":
     unittest.main()
