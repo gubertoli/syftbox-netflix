@@ -2,7 +2,12 @@ import os
 import sys
 import csv
 import joblib
+import json
 import numpy as np
+import pandas as pd
+import unicodedata
+import re
+from rapidfuzz import process
 from datetime import datetime
 from pathlib import Path
 from syftbox.lib import Client, SyftPermission
@@ -132,7 +137,6 @@ def get_latest_file(subfolder_path):
     def extract_datetime(filename):
         try:
             date_str = filename.replace(netflix_csv, "").replace(".csv", "")
-            print(date_str)
             return datetime.strptime(date_str, "%Y-%m-%d")
         except ValueError:
             return datetime.min
@@ -195,6 +199,44 @@ def join_viewing_history_with_netflix(reduced_history, netflix_show_data):
 
     return joined_data
 
+def match_title(title, vocabulary: dict, threshold=80):
+    # Exact match
+    if title in vocabulary:
+        return vocabulary[title]
+    
+    # Fuzzy match
+    vocab_keys = list(vocabulary.keys())  # Convert keys to list for fuzzy matching
+    match_result = process.extractOne(title, vocab_keys)
+    
+    # Extract only the best match and score
+    if match_result is not None:
+        best_match, score = match_result[:2]  # Unpack the first two values
+        if score >= threshold:
+            return vocabulary[best_match]
+    
+    # If no match, return -1
+    return -1
+
+def create_view_counts_vector(aggregated_data: pd.DataFrame) -> np.ndarray:
+    # load vocabulary from aggregator (LATER BE UPDATED TO RETRIEVE FROM AGGREGATOR'S PUBLIC SITE)
+    with open("./aggregator/data/tv-series_vocabulary.json", "r", encoding="utf-8") as file:
+        vocabulary = json.load(file)
+
+    aggregated_data["ID"] = aggregated_data["show"].apply(lambda x: match_title(x, vocabulary))
+    
+    vector_size = len(vocabulary) 
+    sparse_vector = np.zeros(vector_size, dtype=int)
+
+    for _, row in aggregated_data.iterrows():
+        if row["ID"] != -1:
+            sparse_vector[row["ID"]] += row["Total_Views"]
+
+    unmatched_titles = aggregated_data[aggregated_data["ID"] == -1]["show"].tolist()
+    print(">> (create_view_counts_vector) Unmatched Titles:", unmatched_titles)
+
+    return sparse_vector
+
+
 def main():
 
     try:
@@ -221,7 +263,12 @@ def main():
     netflix_show_data = load_csv_to_numpy(netflix_file_path)
     my_shows_data = join_viewing_history_with_netflix(reduced_history, netflix_show_data)
 
-    # Next, to perform something useful with this joined data
+    # Next, to perform something useful with this joined (enhanced) data
+    # This is an enhanced data compared with the retrieved viewing history from Netflix website
+    # show_id,type,title,director,cast,country,date_added,release_year,rating,duration,listed_in,description
+    #
+    # Useful for Embeddings and more complex learning
+
     private_shows_file: Path = private_folder / "my_shows_data_full.npy"
     np.save(str(private_shows_file), my_shows_data)
 
@@ -250,8 +297,14 @@ def main():
     joblib.dump(mlp.coefs_, str(mlp_weights))
     joblib.dump(mlp.intercepts_, str(mlp_bias))
 
-    # Train locally a sequence model to predict next series
+    # Train locally a sequence model to predict next series (filter by > 1 episodes)
+    # - loaded with the original NetflixViewingHistory.csv
     sequence_recommender = SequenceModel(viewing_history)
+    
+    view_counts_vector = create_view_counts_vector(sequence_recommender.aggregated_data)
+    private_tvseries_views_file: Path = private_folder / "tvseries_views_sparse_vector.npy"
+    np.save(str(private_tvseries_views_file), view_counts_vector)
+    
 
 if __name__ == "__main__":
     try:
