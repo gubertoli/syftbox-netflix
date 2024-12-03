@@ -110,11 +110,30 @@ def train_model(dataset_location):
     num_samples = X.shape[0]
     return mlp, scaler, le_show, num_samples
 
+def get_current_day_of_week():
+    """
+    Returns the current day and day of the week.
+    """
+    current_date = datetime.now()
+    return current_date, current_date.weekday()
+
 def get_recommendation(mlp, scaler, le_show, last_watched):
+    """
+    Generates a show recommendation based on the last watched show.
+
+    Args:
+        mlp: Trained MLP model.
+        scaler: Trained StandardScaler.
+        le_show: Fitted LabelEncoder.
+        last_watched: Title of the last watched show (e.g., "Show A: Season 1").
+
+    Returns:
+        Recommended show title.
+    """
     # Extract features from last watched show
     show_name = last_watched.split(':')[0] if ':' in last_watched else last_watched
     season = int(re.search(r'Season (\d+)', last_watched).group(1)) if 'Season' in last_watched else 0
-    day_of_week = datetime.now().weekday()
+    _, day_of_week = get_current_day_of_week()  # Use helper function
     
     # Prepare input features
     show_encoded = le_show.transform([show_name])[0]
