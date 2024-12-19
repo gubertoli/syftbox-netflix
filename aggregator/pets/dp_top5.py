@@ -79,14 +79,32 @@ def dp_top5_series(datasites_path: Path, peers: list[str], min_participants: int
         file: Path = dir / dp_file
         
         if file.exists():
+            # Backwards compatibility - No profile hierarchy
             available_dp_vectors.append(file)
+        else:
+            # Current version - Profile hierarchy
+            # Iterate through all profiles. Get all folders that start with "profile_"
+            flr_prefix = "profile_"
+            profiles = [f for f in os.listdir(dir) if os.path.isdir(os.path.join(dir, f)) and f.startswith(flr_prefix)]
+
+            # Sort the profiles by the number at the end of the folder name
+            profiles = sorted(profiles, key=lambda x: int(x.split("_")[-1]))
+
+            for profile in profiles:
+                profile_file = dir / profile / dp_file
+                
+                if not profile_file.exists():
+                    print(f"DP file not found for {profile}. Skipping...")
+                    continue
+                    
+                available_dp_vectors.append(profile_file)
 
     if len(available_dp_vectors) < min_participants:  
         print(f"{API_NAME} | Aggregator | There are no sufficient partcipants \
                 (Available: {len(available_dp_vectors)}| Required: {min_participants})")
     else:
         destination_folder: Path = ( datasites_path / AGGREGATOR_DATASITE / "private" / API_NAME )
-        vocab: Path = datasites_path / AGGREGATOR_DATASITE / "api_data" / API_NAME / "tv-series_vocabulary.json"
+        vocab: Path = datasites_path / AGGREGATOR_DATASITE / "api_data" / API_NAME / "shared" / "tv-series_vocabulary.json"
         calculate_top5(available_dp_vectors, destination_folder, vocab)
         
         template_path = Path("./aggregator/assets/top5-series.html")

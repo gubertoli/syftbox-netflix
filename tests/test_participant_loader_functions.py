@@ -21,7 +21,7 @@ class TestLoadingFunctions(unittest.TestCase):
         self.save_path = os.path.join(self.sandbox_dir, "tmp_model_parms")
         self.user_id = "test_user"
         self.global_V_path = os.path.join(self.save_path, "global_V.npy")
-        self.user_matrix_path = os.path.join(self.save_path, f"{self.user_id}_U.npy")
+        self.user_matrix_path = os.path.join(self.save_path, "U.npy")
 
         # Create directories
         os.makedirs(self.private_folder, exist_ok=True)

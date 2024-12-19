@@ -94,7 +94,7 @@ def train_model(dataset_location):
 ## ==================================================================================================
 ## Predictor Process
 ## ==================================================================================================
-def train_and_save_mlp(latest_data_file, restricted_public_folder):
+def train_and_save_mlp(latest_data_file, private_folder, restricted_public_folder):
     """
     Train the MLP model and save its weights and biases.
 

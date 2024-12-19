@@ -13,7 +13,7 @@ from participant.federated_learning.svd_dp import (
     apply_differential_privacy
 )
 
-def save_training_results(user_id, base_path, V, delta_V, U_u):
+def save_training_results(user_id, private_path, restricted_path, V, delta_V, U_u):
     """
     Save the updated V matrix, delta_V, and user matrix to disk.
 
@@ -24,20 +24,27 @@ def save_training_results(user_id, base_path, V, delta_V, U_u):
         delta_V (dict): Dictionary of delta updates for item factors.
         U_u (np.ndarray): Updated user matrix.
     """
-    user_path = os.path.join(base_path, user_id)
-    os.makedirs(user_path, exist_ok=True)  # Ensure the user directory exists
+    user_private_path = os.path.join(private_path, 'svd_training')
+    user_restricted_path = os.path.join(restricted_path, 'svd_training')
+    os.makedirs(user_private_path, exist_ok=True)  # Ensure the user directory exists
+    os.makedirs(user_restricted_path, exist_ok=True)  # Ensure the user directory exists
 
     # Save updated V
-    participant_v_save_path = os.path.join(user_path, f"{user_id}_updated_V.npy")
-    participant_deltav_save_path = os.path.join(user_path, f"{user_id}_delta_V.npy")
+    participant_v_save_path = os.path.join(user_private_path, f"updated_V.npy")
+    participant_deltav_save_path = os.path.join(user_restricted_path, f"delta_V.npy")
     np.save(participant_v_save_path, V)
     np.save(participant_deltav_save_path, delta_V)
 
+    # Write log in the restricted folder
+    with open(os.path.join(user_restricted_path, f"local_finetuning_succeed.txt"), "w") as f:
+        f.write(f"User {user_id} training results saved.")
+
     # Save updated user matrix
-    user_matrix_path = os.path.join(user_path, f"{user_id}_U.npy")
+    user_matrix_path = os.path.join(user_private_path, f"U.npy")
     np.save(user_matrix_path, U_u)
 
-    print(f"Updated and saved training results for user: {user_id} at {user_path}.")
+    print(f"Updated and saved private training results for user: {user_id} at {user_private_path}.")
+    print(f"Updated and saved delta updates for user: {user_id} at {user_restricted_path}.")
 
 def prepare_training_data(user_id, tv_vocab, final_ratings):
     """
@@ -62,22 +69,28 @@ def perform_local_training(train_data, initial_V, initial_U_u, alpha=0.01, lambd
             V[item_id] += alpha * V_i_grad
     return initial_V, V, U_u
 
-def participant_fine_tuning(user_id, private_folder, epsilon=None, clipping_threshold=None, noise_type="gaussian", save_path="mock_dataset_location/tmp_model_parms", plot=False, dp_all=False):
+def participant_fine_tuning(user_id, private_path, global_path, restricted_path, epsilon=None, clipping_threshold=None, noise_type="gaussian", plot=False, dp_all=False):
     """
     Orchestrator function for participant fine-tuning.
     """
     # Step 1: Load vocabulary
-    vocabulary_path = "aggregator/data/tv-series_vocabulary.json"
-    tv_vocab = load_tv_vocabulary(vocabulary_path)
+    try:
+        vocabulary_path = f"{global_path}/tv-series_vocabulary.json"
+        tv_vocab = load_tv_vocabulary(vocabulary_path)
+        print(f"Loaded TV series vocabulary from {vocabulary_path}.")
+    except FileNotFoundError:
+        vocabulary_path = "aggregator/data/tv-series_vocabulary.json"
+        tv_vocab = load_tv_vocabulary(vocabulary_path)
+        print(f"Loaded TV series vocabulary from {vocabulary_path}.")
 
     # Step 2: Load global item factors
-    V = load_global_item_factors(save_path)
+    V = load_global_item_factors(global_path)
 
     # Step 3: Load participant's ratings
-    final_ratings = load_participant_ratings(private_folder)
+    final_ratings = load_participant_ratings(private_path)
 
     # Step 4: Load or initialize user matrix
-    U_u = load_or_initialize_user_matrix(user_id, V.shape[1], save_path=os.path.join(save_path, user_id))
+    U_u = load_or_initialize_user_matrix(user_id, V.shape[1], save_path=os.path.join(private_path, 'svd_training'))
 
     # Step 5: Prepare training data
     train_data = prepare_training_data(user_id, tv_vocab, final_ratings)
@@ -101,7 +114,7 @@ def participant_fine_tuning(user_id, private_folder, epsilon=None, clipping_thre
     delta_norms_after = [np.linalg.norm(v) for i, v in enumerate(dp_deltas.values())]
 
     # Step 8: Save results
-    save_training_results(user_id, save_path, updated_V, dp_deltas, updated_U_u)
+    save_training_results(user_id, private_path, restricted_path, updated_V, dp_deltas, updated_U_u)
 
     if plot:
         # Step 9: Plot delta distributions

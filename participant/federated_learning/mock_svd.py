@@ -1,3 +1,6 @@
+# Currently not working as in development.
+# This is an exploratory process for functions that are being refactored into the main codebase.
+
 import os
 import json
 import numpy as np
@@ -9,8 +12,8 @@ import copy
 from participant.main import setup_environment
 from syftbox.lib import Client
 
-
 from participant.federated_learning.svd_participant_finetuning import participant_fine_tuning
+from participant.federated_learning.svd_participant_local_recommendation import compute_recommendations
 from participant.federated_learning.svd_server_initialisation import initialize_item_factors
 from participant.federated_learning.svd_server_aggregation import aggregate_item_factors
 from participant.server_utils.data_loading import load_tv_vocabulary, load_imdb_ratings, load_global_item_factors
@@ -18,13 +21,12 @@ from participant.server_utils.data_loading import load_tv_vocabulary, load_imdb_
 from dotenv import load_dotenv
 load_dotenv()
 
-
 def normalize_string(s):
     """
     """
     return s.replace('\u200b', '').lower()
 
-def server_initialization(save_to:str = "mock_dataset_location/tmp_model_parms", tv_series_path="aggregator/data/tv-series_vocabulary.json", imdb_ratings_path="data/imdb_ratings.npy"):
+def server_initialization(save_to:str, tv_series_path:str, imdb_ratings_path:str):
 
     # Step 1: Load vocabulary and IMDB ratings
     tv_vocab = load_tv_vocabulary(tv_series_path)
@@ -43,7 +45,7 @@ def server_initialization(save_to:str = "mock_dataset_location/tmp_model_parms",
 
     print("Server initialization complete. Item factors (V) are saved.")
 
-def server_aggregate(updates, weights=None, learning_rate=1.0, epsilon=1.0, clipping_threshold=0.5, save_to="mock_dataset_location/tmp_model_parms"):
+def server_aggregate(updates, save_to, weights=None, learning_rate=1.0, epsilon=1.0, clipping_threshold=0.5):
     """
     Orchestrates the server aggregation process:
     1. Loads current global item factors.
@@ -74,76 +76,27 @@ def server_aggregate(updates, weights=None, learning_rate=1.0, epsilon=1.0, clip
 
     print("Server aggregation complete. Global item factors (V) updated.")
 
-def local_recommendation(user_id, tv_vocab, user_ratings, exclude_watched=True):
-    # Assume we have user_ratings, global_V, global_U, tv_vocab, etc. from previous code
 
-    # Load model parameters
-    global_path = "mock_dataset_location/tmp_model_parms"
-    local_path = os.path.join("mock_dataset_location/tmp_model_parms", user_id)
+def local_recommendation(user_id, tv_vocab, user_ratings, exclude_watched=True,
+                         global_path="mock_dataset_location/tmp_model_parms",
+                         local_root_path="mock_dataset_location/tmp_model_parms"):
+    """Main entry point for local recommendation generation."""
+    # Step 1: Load data
+    local_path = os.path.join(local_root_path, user_id)
     global_V_path = os.path.join(global_path, "global_V.npy")
-    user_U_path = os.path.join(local_path, f"{user_id}_U.npy")
-
+    user_U_path = os.path.join(local_path, "U.npy")
+    
     user_U = np.load(user_U_path)
     global_V = np.load(global_V_path)
 
-    print("Selecting recommendations based on most recent shows watched...")
-    recent_week = 12
-    recent_items = [title for (title, week, n_watched, rating) in user_ratings if week == recent_week]
-    recent_item_ids = [tv_vocab[title] for title in recent_items if title in tv_vocab]
-    print("For week (of all years)", recent_week, "watched n_shows=:", len(recent_items))
+    # Step 2: Run process to compute recommendations
+    recommendations = compute_recommendations(user_U, global_V, tv_vocab, user_ratings, exclude_watched=exclude_watched)
 
-    alpha = 0.7  # Weight for long-term preferences
-    beta = 0.3   # Weight for recent preferences
-
-    if recent_item_ids:
-        U_global_activity = sum(global_V[item_id] for item_id in recent_item_ids) / len(recent_item_ids)
-        U_recent = alpha * user_U + beta * U_global_activity
-    else:
-        U_recent = user_U  # fallback
-
-    all_items = list(tv_vocab.keys())
-    watched_titles = set(normalize_string(t) for (t, _, _, _) in user_ratings)
-
-    # Optionally, exclude already watched items
-    if exclude_watched:
-        candidate_items = [title for title in all_items if normalize_string(title) not in watched_titles]
-    else:
-        # Or consider all items
-        candidate_items = all_items
-
-
-    # tv_vocab = {normalize_string(title): item_id for title, item_id in tv_vocab.items()}
-
-    predictions = []
-    for title in candidate_items:
-        item_id = tv_vocab[title]
-        pred_rating = U_recent.dot(global_V[item_id])
-        predictions.append((title, pred_rating))
-
-    predictions.sort(key=lambda x: x[1], reverse=True)
-    top_6 = predictions[:6]
-
+    # Step 3: Write or return recommendations
     print("Recommended based on most recently watched:")
-    for i, (show, score) in enumerate(top_6):
+    for i, (show, score) in enumerate(recommendations):
         print(f"\t{i+1} => {show}: {score:.4f}")
-
-
-    # Debug for development...
-    # # Analytics for the shows that are rated by user
-    # print("User's ratings:")
-    # ratings = set([(title, rating) for title, _, _, rating in user_ratings if title in tv_vocab])
-
-    # print("Actual Ratings for Recommended Shows:")
-    # for title,rating in ratings:
-    #     if title in [x[0] for x in top_6]:
-    #         print(f"\t{title}: {rating}")
-    
-    # print("Actual Ratings for recently watched shows:")
-    # for title,rating in ratings:
-    #     if title in recent_items:
-    #         print(f"\t{title}: {rating}")
-
-    return top_6
+    return recommendations
 
 def run_process():
 
@@ -152,16 +105,20 @@ def run_process():
     NETFLIX_PROFILES = os.getenv("NETFLIX_PROFILES")
     netflix_profiles_list = NETFLIX_PROFILES.split(",")
 
-    test_user = netflix_profiles_list[0]
+    test_user_name = netflix_profiles_list[0]
+    test_user_id = 'profile_0'
+    test_user = test_user_id
     # test_user = f'{test_user}_mock0' # For testing with simulations
 
     client = Client.load()
 
+    restricted_shared_folders = {}
     restricted_public_folders = {}
     private_folders = {}
 
-    for profile in netflix_profiles_list:
-        restricted_public_folders[profile], private_folders[profile] = setup_environment(client, API_NAME, AGGREGATOR_DATASITE, profile)
+    for profile_id, profile in enumerate(netflix_profiles_list):
+        profile_masked_name = f'profile_{profile_id}'
+        restricted_shared_folders[profile_masked_name], restricted_public_folders[profile_masked_name], private_folders[profile_masked_name] = setup_environment(client, API_NAME, AGGREGATOR_DATASITE, profile_masked_name)
 
     ########################################
     # Step 0: Model Initialisation and Fine-Tuning
@@ -169,7 +126,7 @@ def run_process():
 
     # Clear folder
     fldr_base = "mock_dataset_location/tmp_model_parms"
-    user_ids = netflix_profiles_list
+    user_ids = list(private_folders.keys())
     # user_ids = netflix_profiles_list[:-1] # Exclude the last user for testing
 
     for user_id in user_ids:
@@ -178,13 +135,18 @@ def run_process():
             shutil.rmtree(fldr_user)
 
     # Server initialisation
-    server_initialization()
+    server_initialization(save_to="mock_dataset_location/tmp_model_parms", 
+                           tv_series_path="aggregator/data/tv-series_vocabulary.json", 
+                           imdb_ratings_path="data/imdb_ratings.npy")
     backup_global_v = np.load("mock_dataset_location/tmp_model_parms/global_V.npy") # For analytics
 
     delta_V = {}
     for user_id in user_ids:
         # Fine-tuning of the item embeddings with user data
-        delta_V[user_id] = participant_fine_tuning(user_id, private_folders[user_id], epsilon=1, noise_type="gaussian", clipping_threshold=None, plot=False, dp_all=False) #0.36
+        global_path = "mock_dataset_location/tmp_model_parms"
+        save_path="mock_dataset_location/tmp_model_parms"
+        restricted_folder = private_folders[user_id]
+        delta_V[user_id] = participant_fine_tuning(user_id, private_folders[user_id], global_path, restricted_folder, epsilon=1, noise_type="gaussian", clipping_threshold=None, plot=False, dp_all=False) #0.36
 
     # # Dictionary to store all mocked user IDs and map them to original user IDs
     # mocked_to_original_mapping = {}
@@ -222,7 +184,7 @@ def run_process():
         tv_vocab = json.load(f)
 
     # Example user data
-    my_activity_path = os.path.join(restricted_public_folders[test_user], 'netflix_aggregated.npy')
+    my_activity_path = os.path.join(private_folders[test_user], 'netflix_aggregated.npy')
     my_activity = np.load(my_activity_path, allow_pickle=True) # Title, Week, Rating
 
     my_activity_formatted = np.empty(my_activity.shape, dtype=object)
@@ -238,14 +200,15 @@ def run_process():
     # Server aggregation
     # server_aggregate([delta_V[user_ids[0]], delta_V[user_ids[1]]])
     delta_V_list = list(delta_V.values())
-    server_aggregate(delta_V_list, epsilon=None, clipping_threshold=None)
+    save_path="mock_dataset_location/tmp_model_parms"
+    server_aggregate(delta_V_list, save_to=save_path, epsilon=None, clipping_threshold=None)
 
     print("Federated Recommendations (IMDB)...")
     top_6 = local_recommendation(test_user, tv_vocab, user_ratings=my_activity_formatted)
 
 
     # Logs
-    global_V_path = os.path.join("mock_dataset_location/tmp_model_parms", "global_V.npy")
+    global_V_path = os.path.join(save_path, "global_V.npy")
     global_V = np.load(global_V_path)
     print("Global V shape:", global_V.shape)
 

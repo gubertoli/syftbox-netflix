@@ -14,16 +14,20 @@ class TestParticipantFineTuning(unittest.TestCase):
         # Setup sandboxed test environment
         self.sandbox_dir = "test_sandbox/participant_datasite"
         self.user_id = "test_user"
+        self.shared_path = os.path.join(self.sandbox_dir, "shared")
+        self.restricted_path = os.path.join(self.sandbox_dir, "restricted", self.user_id)
         self.private_folder = os.path.join(self.sandbox_dir, "private", self.user_id)
-        self.save_path = os.path.join(self.sandbox_dir, "tmp_model_parms")
-        self.global_V_path = os.path.join(self.save_path, "global_V.npy")
-        self.participant_V_path = os.path.join(self.save_path, self.user_id, f"{self.user_id}_updated_V.npy")
-        self.user_matrix_path = os.path.join(self.save_path, self.user_id, f"{self.user_id}_U.npy")
-        self.delta_V_path = os.path.join(self.save_path, self.user_id, f"{self.user_id}_delta_V.npy")
 
         # Create sandbox directories
-        os.makedirs(self.private_folder, exist_ok=True)
-        os.makedirs(os.path.join(self.save_path, self.user_id), exist_ok=True)
+        os.makedirs(self.shared_path, exist_ok=True)
+        os.makedirs(os.path.join(self.private_folder, "svd_training"), exist_ok=True)
+        os.makedirs(os.path.join(self.restricted_path, "svd_training"), exist_ok=True)
+
+        # Declare input/output paths
+        self.global_V_path = os.path.join(self.shared_path, "global_V.npy")
+        self.participant_V_path = os.path.join(self.private_folder, "svd_training", f"updated_V.npy")
+        self.user_matrix_path = os.path.join(self.private_folder, "svd_training", f"U.npy")
+        self.delta_V_path = os.path.join(self.restricted_path, "svd_training", f"delta_V.npy")
 
         # Mock data
         self.tv_vocab = {"show1": 0, "show2": 1}
@@ -34,8 +38,7 @@ class TestParticipantFineTuning(unittest.TestCase):
         # Save mock data
         np.save(self.global_V_path, self.V)
         np.save(os.path.join(self.private_folder, "ratings.npy"), self.final_ratings)
-        user_matrix_path = os.path.join(self.save_path, self.user_id, f"{self.user_id}_U.npy")
-        np.save(user_matrix_path, self.U_u)
+        np.save(self.user_matrix_path, self.U_u)
 
     def tearDown(self):
         # Remove sandbox directory after each test
@@ -71,7 +74,7 @@ class TestParticipantFineTuning(unittest.TestCase):
 
     def test_save_training_results(self):
         # Save training results
-        save_training_results(self.user_id, self.save_path, self.V, self.final_ratings, self.U_u)
+        save_training_results(self.user_id, self.private_folder, self.restricted_path, self.V, self.final_ratings, self.U_u)
 
         # Check that the files exist
         self.assertTrue(os.path.exists(self.participant_V_path))

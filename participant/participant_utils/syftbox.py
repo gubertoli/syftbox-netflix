@@ -48,11 +48,10 @@ def setup_environment(client, api_name, aggregator_path, profile):
         permissions.read.append(aggregator_path) # set read permission to the aggregator
         permissions.save(path)
 
-    if profile:
-        restricted_public_folder = client.api_data(api_name) / profile
-    else:
-        restricted_public_folder = client.api_data(api_name)
+    datasites_path = Path(client.datasite_path.parent)
+    restricted_shared_folder = Path(datasites_path / aggregator_path / "api_data" / api_name / "shared")
+    restricted_public_folder = client.api_data(api_name) / profile
 
     create_public_folder(restricted_public_folder, client, aggregator_path)
     private_folder = create_private_folder(client.datasite_path, client, profile)
-    return restricted_public_folder, private_folder
+    return restricted_shared_folder, restricted_public_folder, private_folder

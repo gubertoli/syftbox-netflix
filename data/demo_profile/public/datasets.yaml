@@ -4,5 +4,5 @@ datasets:
   - name: "Netflix Data"
     path: "data/demo_profile/private/dummy.csv"
     dataset_loader: "" 
-    description: "Primary dataset for user behavior analysis."
+    description: "Primary dataset for netflix analytics."
     format: "CSV"

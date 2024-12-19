@@ -70,14 +70,15 @@ def match_title(title, vocabulary: dict, threshold=80):
     # If no match, return -1
     return -1
 
-def create_view_counts_vector(datasite_path, aggregated_data: pd.DataFrame, parent_path: Path) -> np.ndarray:
+def create_view_counts_vector(restricted_shared_folder, aggregated_data: pd.DataFrame) -> np.ndarray:
     # TODO: load vocabulary from aggregator (LATER BE UPDATED TO RETRIEVE FROM AGGREGATOR'S PUBLIC SITE)
     try:
-        shared_file = os.path.join(str(parent_path), datasite_path, "api_data", "netflix_data", "tv-series_vocabulary.json")
+        shared_file = os.path.join(restricted_shared_folder, "tv-series_vocabulary.json")
         with open(shared_file, "r", encoding="utf-8") as file:
             vocabulary = json.load(file)
     except:
         # TODO: to remove once available in the Aggregator
+        print("Dev Note -> Could not find the shared file. Loading from local file.")
         with open("./aggregator/data/tv-series_vocabulary.json", "r", encoding="utf-8") as file:
             vocabulary = json.load(file)
 

@@ -34,7 +34,7 @@ def load_global_item_factors(save_path):
 
 def load_or_initialize_user_matrix(user_id, latent_dim, save_path="mock_dataset_location/tmp_model_parms"):
 
-    user_matrix_path = os.path.join(save_path, f"{user_id}_U.npy")
+    user_matrix_path = os.path.join(save_path, "U.npy")
     if os.path.exists(user_matrix_path):
         U_u = np.load(user_matrix_path)
         print(f"Loaded existing user matrix for {user_id}.")
@@ -51,7 +51,7 @@ def initialize_user_matrix(user_id, latent_dim, save_path="mock_dataset_location
     U_u = np.random.normal(scale=0.01, size=(latent_dim,))
 
     # Save user matrix
-    user_matrix_path = os.path.join(save_path, f"{user_id}_U.npy")
+    user_matrix_path = os.path.join(save_path, "U.npy")
     np.save(user_matrix_path, U_u)
     print(f"Initialized and saved user matrix for {user_id}.")
     return U_u

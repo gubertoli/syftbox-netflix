@@ -51,22 +51,20 @@ class TestDataProcessingViewCountVectors(unittest.TestCase):
             "Total_Views": [6, 18, 4, 5],
             "First_Seen": ["2012-09-30", "2012-10-21", "2012-09-30", "2013-01-01"],
         })
-        parent_path = Path("test_sandbox")
 
-        datasite_path = 'aggregator_datasite'
-        vocabulary_filename = "tv-series_vocabulary.json"
-        vocabulary_dir = os.path.join(str(parent_path), datasite_path, "api_data", "netflix_data")
-        vocabulary_path = os.path.join(vocabulary_dir, vocabulary_filename)
+        sandbox_dir = "test_sandbox/aggregator_datasite"
+        shared_path = os.path.join(sandbox_dir, "shared")
+        vocabulary_path = os.path.join(shared_path, "tv-series_vocabulary.json")
 
         # Ensure the parent directory exists
-        os.makedirs(vocabulary_dir, exist_ok=True)
+        os.makedirs(shared_path, exist_ok=True)
+
         # Write the vocabulary to the file
         with open(vocabulary_path, "w") as file:
             json.dump(vocabulary, file)
 
-
         # Mock the JSON loading
-        result = create_view_counts_vector(datasite_path, aggregated_data, parent_path)
+        result = create_view_counts_vector(shared_path, aggregated_data)
 
         expected = np.array([0, 0, 10, 18])  # Top Gear: 6 + 4, South Park: 18
         np.testing.assert_array_equal(result, expected)

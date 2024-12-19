@@ -51,7 +51,7 @@ def create_shared_folder(path: Path, api_name:str, client: Client, participants:
     Create a shared folder accessible to participants only with the computations
     """
 
-    shared_datapath: Path = path / "api_data" / api_name
+    shared_datapath: Path = path / "api_data" / api_name / "shared"
     os.makedirs(shared_datapath, exist_ok=True)
 
     # Set the default permissions
