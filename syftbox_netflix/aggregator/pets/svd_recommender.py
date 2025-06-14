@@ -53,7 +53,8 @@ def local_recommendation(local_path, global_path, tv_vocab, exclude_watched=True
             "rating": row["Rating"],
             "imdb": row["IMDB"] if pd.notna(row["IMDB"]) else "N/A",  # Default to N/A if IMDB is missing
             "img": row["Cover URL"],
-            "count": int(score)
+            "count": int(score),
+            "raw_score": score
         }
         top5_data.append(entry)
 

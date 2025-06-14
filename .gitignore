@@ -170,6 +170,10 @@ logs
 script_timestamps/*
 
 # TV series webscrapper
-aggregator/netflix_series.py
+syftbox_netflix/aggregator/netflix_series.py
+
+# Local recommendations
+syftbox_netflix/results/*
+results/*
 
 demo

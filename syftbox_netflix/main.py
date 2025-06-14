@@ -4,11 +4,13 @@ import os
 import sys
 import subprocess
 from pathlib import Path
+import json
 
 import numpy as np
 from dotenv import load_dotenv
 from syft_core import Client as SyftboxClient
 from syft_core import SyftClientConfig
+from syftbox_netflix.aggregator.pets.svd_recommender import local_recommendation
 
 from .federated_analytics import data_processing as fa
 from .federated_analytics.dp_series import run_top5_dp
@@ -241,6 +243,49 @@ def main(profile, profile_id):
     version_file = os.path.join(restricted_public_folder, "version.txt")
     with open(version_file, "w") as f:
         f.write(str(current_version))
+
+    try:
+        logging.debug("Performing Local SVD Recommandations...")
+        ## Note, this is a local recommendation, not a federated one
+        ## Only works for cases where the aggregator account is also a participant, and uses the aggregator's private data to generate recommendations
+        ## This is for DEMO purposes while maintaining privacy of the participants
+        participant_private_path = (
+            client.datasite_path / "private" / APP_NAME / "profile_0"
+        )
+        datasites_path = Path(client.datasite_path.parent)
+        shared_folder_path: Path = (datasites_path / AGGREGATOR_DATASITE / "app_data" / APP_NAME / "shared")
+        tv_vocab = {}
+
+        try:
+            json_file_path = shared_folder_path / "tv-series_vocabulary.json"
+            with open(json_file_path, 'r', encoding='utf-8') as f:
+                tv_vocab = json.load(f)
+        except Exception as e:
+            logging.error(
+            f"Could not find TV vocabulary file: {e}"
+        )
+        
+        recommendations = local_recommendation(
+            participant_private_path,
+            shared_folder_path,
+            tv_vocab,
+            exclude_watched=True,
+        )
+
+        results_path = 'results/recommendations.json'
+        try:
+            os.makedirs(os.path.dirname(results_path), exist_ok=True)
+            with open(results_path, 'w') as f:
+                json.dump(recommendations, f, indent=4)
+        except (IOError, TypeError) as e:
+            logging.error(
+                f"ERROR: Failed to write local recommendations to output file: {e}"
+            )
+
+    except Exception as e:
+        logging.error(
+            f"An unexpected error occurred during Local SVD Recommandations: {e}"
+        )
 
 
 if __name__ == "__main__":
