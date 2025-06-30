@@ -138,13 +138,14 @@ def run_federated_learning(
 def main(profile, profile_id):
     logging.info("Starting local webpage...")
     local_path = os.path.dirname(os.path.abspath(__file__))  # get path of this main.py
+    assigned_port = os.getenv("SYFTBOX_ASSIGNED_PORT", "8080")
 
     command = [
         "uv", "run",
         "uvicorn", "app:app",
         "--reload",
         "--host", "0.0.0.0",
-        "--port", "8080"
+        "--port", assigned_port
     ]
 
     # Run it from the script's directory
