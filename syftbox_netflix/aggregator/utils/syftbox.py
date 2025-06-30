@@ -82,8 +82,10 @@ def create_recommendation_dataset(
     file_datapath: Path = path / "app_data" / api_name / "shared"
     os.makedirs(file_datapath, exist_ok=True)
 
-    with open(file_datapath / "recommendations.csv", "w") as f:
-        f.write("timestamp,username,raw_list,reranked_list,item_from_column,clicked_item\n")
+    file_path = file_datapath / "recommendations.csv"
+    if not file_path.exists():
+        with open(file_path, "w") as f:
+            f.write("timestamp,username,raw_list,reranked_list,item_from_column,clicked_item\n")
 
     for participant in participants:  # set read permission to participants
         permissions.add_rule(path="recommendations.csv", user=participant, permission="write")
